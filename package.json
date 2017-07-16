@@ -1,0 +1,28 @@
+{
+  "name": "codegolfslack",
+  "version": "1.0.0",
+  "description": "A collection of code for the Algolfithms slack.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Algolfithms/Slack.git"
+  },
+  "keywords": [
+    "code",
+    "golf",
+    "algolfithms",
+    "slack"
+  ],
+  "author": "Saurabh Totey",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Algolfithms/Slack/issues"
+  },
+  "homepage": "https://github.com/Algolfithms/Slack#readme",
+  "dependencies": {
+    "@slack/client": "^3.10.0"
+  }
+}
