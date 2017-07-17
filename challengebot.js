@@ -7,25 +7,24 @@ class ChallengeBot{
      * Sets bot handlers for events
      */
     constructor(token){
-        this.token = token;
-        this.isConnected = false;
         this.challenges = {};
         this.currentChallenge = "";
         this.lastTimeChallenging = null;
+        this.id = "";
 
         var RtmClient = require('@slack/client').RtmClient;
         var CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS;
         var RTM_EVENTS = require('@slack/client').RTM_EVENTS;
 
         this.rtm = new RtmClient(token);
+        this.rtm.idFunc = (id) => this.id = id;
         this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
-            console.log(`Logged in as ${rtmStartData.self.name} of team ${rtmStartData.team.name}`);
+            this.id = "<@" + rtmStartData.self.id + ">";
+            console.log(rtmStartData.self.name + " is ready to rumble as " + this.id + " on the team " + rtmStartData.team.name);
+            this.idFunc(this.id);
         });
         this.rtm.start();
 
-        this.rtm.on(CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, function () {
-            this.isConnected = true;
-        });
         var handler = (message) => this.interpretText(message);
         this.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
             try{console.log(message.text);handler(message);}catch(e){console.log(e);}
@@ -38,6 +37,7 @@ class ChallengeBot{
     interpretText(message){
         //TODO restructure all of below so it isn't all just if statements (eg. move them into their own functions or something)
         var args = message.text.split(" ");
+        if(args[0] !== this.id){return;}
         if(args[1] == "add"){ //Will add a challenge for the possible selection of challenges that this has
             if(args.length < 4){
                 this.rtm.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'add' command. Correct usage is '@challengebot add [challenge name (only 1 word)] [challenge description]'", message.channel);
