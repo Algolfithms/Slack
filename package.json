@@ -24,6 +24,7 @@
   },
   "homepage": "https://github.com/Algolfithms/Slack#readme",
   "dependencies": {
-    "@slack/client": "^3.10.0"
+    "@slack/client": "^3.10.0",
+    "express": "^4.15.3"
   }
 }
