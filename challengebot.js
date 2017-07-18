@@ -27,8 +27,19 @@ class ChallengeBot{
 
         var handler = (message) => this.interpretText(message);
         this.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
-            try{console.log(message.text);handler(message);}catch(e){console.log(e);}
+            console.log(message.text);
+            if(message != undefined){
+                handler(message);
+            }
         });
+    }
+
+    /**
+     * Makes the bot send a message on a specified channel and then logs it
+     */
+    sendMessage(message, channel){
+        console.log(channel + ">: " + message);
+        this.rtm.sendMessage(message, channel);
     }
 
     /**
@@ -40,28 +51,28 @@ class ChallengeBot{
         if(args[0] !== this.id){return;} //Will quit the execution of the function if the first word of the message isn't "@challengebot"
         if(args[1] == "add"){ //Will add a challenge for the possible selection of challenges that this has
             if(args.length < 4){
-                this.rtm.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'add' command. Correct usage is '@challengebot add [challenge name (only 1 word)] [challenge description]'", message.channel);
+                this.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'add' command. Correct usage is '@challengebot add [challenge name (only 1 word)] [challenge description]'", message.channel);
                 return;
             }
             this.challenges[args[2]] = args.splice(3, args.length).join(" ");
-            this.rtm.sendMessage("The challenge was successfully added", message.channel);
+            this.sendMessage("The challenge was successfully added", message.channel);
         }else if(args[1] == "remove"){ //Will remove a challenge from the possible selection of challenges this bot has
-            this.rtm.sendMessage(this.removeChallenge(args[2]), message.channel);
+            this.sendMessage(this.removeChallenge(args[2]), message.channel);
         }else if(args[1] == "possible"){ //Will list all possible challenges this bot has
             if(Object.keys(this.challenges).length == 0){
-                this.rtm.sendMessage("There are no possible challenges right now", message.channel);
+                this.sendMessage("There are no possible challenges right now", message.channel);
                 return;
             }
-            this.rtm.sendMessage(String(Object.keys(this.challenges).join(", ")), message.channel);
+            this.sendMessage(String(Object.keys(this.challenges).join(", ")), message.channel);
         }else if(args[1] == "describe"){ //Will describe a challenge given the name of the challenge
             if(args.length < 3){
-                this.rtm.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'describe' command. Correct usage is '@challengebot describe [challenge name]'", message.channel);
+                this.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'describe' command. Correct usage is '@challengebot describe [challenge name]'", message.channel);
                 return;
             }
-            this.rtm.sendMessage(this.describeChallenge(args[2]), message.channel);
+            this.sendMessage(this.describeChallenge(args[2]), message.channel);
         }else if(args[1] == "current"){ //Will display or update and then display the current challenge
             if(Object.keys(this.challenges).length == 0){
-                this.rtm.sendMessage("There are no challenges right now, unfortunately... :(", message.channel);
+                this.sendMessage("There are no challenges right now, unfortunately... :(", message.channel);
                 return;
             }
             var date = new Date();
@@ -73,9 +84,9 @@ class ChallengeBot{
                 }while(this.currentChallenge == oldChallenge);
                 this.removeChallenge(oldChallenge);
             }
-            this.rtm.sendMessage(this.describeChallenge(this.currentChallenge), message.channel);
+            this.sendMessage(this.describeChallenge(this.currentChallenge), message.channel);
         }else{ //Will display what to do to get started with the bot
-            this.rtm.sendMessage("Command not understood; use this bot, type out '@challengebot' and then either 'add', 'remove', 'possible', 'describe', or 'current'.", message.channel);
+            this.sendMessage("Command not understood; use this bot, type out '@challengebot' and then either 'add', 'remove', 'possible', 'describe', or 'current'.", message.channel);
         }
     }
 
