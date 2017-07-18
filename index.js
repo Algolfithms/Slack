@@ -9,7 +9,7 @@ let challengebot = new ChallengeBot(process.env.challengeBotToken);
 //Below makes a webpage so that a timer can keep pinging the website
 //Prevents the script from going to sleep
 var express = require('express');
-var http = require("http");
+var https = require("https");
 var app = express();
 app.use(express.static('public'));
 app.get("/", function (request, response) {
@@ -19,5 +19,5 @@ var listener = app.listen(process.env.PORT, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
 setInterval(function() {
-    http.get("https://algolfithms-slack.herokuapp.com/");
+    https.get("https://algolfithms-slack.herokuapp.com/");
 }, 150000);
