@@ -3,7 +3,7 @@ class ChallengeBot{
 
     /**
      * A constructor for a ChallengeBot
-     * Takes in a token and then initialized class properties as well as
+     * Takes in a token and then initializes class properties as well as
      * Sets bot handlers for events
      */
     constructor(token){
@@ -19,9 +19,9 @@ class ChallengeBot{
         this.rtm = new RtmClient(token);
         this.rtm.idFunc = (id) => this.id = id;
         this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
-            this.id = "<@" + rtmStartData.self.id + ">";
-            console.log(rtmStartData.self.name + " is ready to rumble as " + this.id + " on the team " + rtmStartData.team.name);
-            this.idFunc(this.id);
+            var id = "<@" + rtmStartData.self.id + ">";
+            console.log(rtmStartData.self.name + " is ready to rumble as " + id + " on the team " + rtmStartData.team.name);
+            this.idFunc(id);
         });
         this.rtm.start();
 
@@ -37,7 +37,7 @@ class ChallengeBot{
     interpretText(message){
         //TODO restructure all of below so it isn't all just if statements (eg. move them into their own functions or something)
         var args = message.text.split(" ");
-        if(args[0] !== this.id){return;}
+        if(args[0] !== this.id){return;} //Will quit the execution of the function if the first word of the message isn't "@challengebot"
         if(args[1] == "add"){ //Will add a challenge for the possible selection of challenges that this has
             if(args.length < 4){
                 this.rtm.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'add' command. Correct usage is '@challengebot add [challenge name (only 1 word)] [challenge description]'", message.channel);
