@@ -1,7 +1,5 @@
 //Not going to codegolf this
 //Below makes the bots on slack
-//Bots only actually get constructed if not editing
-//This makes sure the slack rate limit never comes into play
 'use strict';
 const ChallengeBot = require("./challengebot.js");
 let challengebot = new ChallengeBot(process.env.challengeBotToken);

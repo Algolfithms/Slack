@@ -77,11 +77,11 @@ class ChallengeBot{
             }
             var date = new Date();
             if(this.lastTimeChallenging == null || this.lastTimeChallenging < new Date(date.getYear(), date.getMonth(), date.getDate(), 7, 30)){
-                this.lastTimeChallenging = new Date(date.getYear(), date.getMonth(), date.getDate(), date.getHours(), date.getMinutes());
+                this.lastTimeChallenging = date;
                 var oldChallenge = this.currentChallenge;
                 do{
-                    this.currentChallenge = Object.keys(this.challenges)[Math.floor(Math.random() * this.challenges.length)];
-                }while(this.currentChallenge == oldChallenge);
+                    this.currentChallenge = Object.keys(this.challenges)[Math.floor(Math.random() * Object.keys(this.challenges).length)];
+                }while(this.currentChallenge == oldChallenge && Object.keys(this.challenges).length > 1);
                 this.removeChallenge(oldChallenge);
             }
             this.sendMessage(this.describeChallenge(this.currentChallenge), message.channel);
