@@ -54,7 +54,7 @@ class ChallengeBot{
                 this.sendMessage("Sorry, but the incorrect amount of parameters were provided for the 'add' command. Correct usage is '@challengebot add [challenge name (only 1 word)] [challenge description]'", message.channel);
                 return;
             }
-            this.challenges[args[2]] = args.splice(3, args.length).join(" ");
+            this.challenges[args[2]] = args.slice(3, args.length).join(" ");
             this.sendMessage("The challenge was successfully added", message.channel);
         }else if(args[1] == "remove"){ //Will remove a challenge from the possible selection of challenges this bot has
             this.sendMessage(this.removeChallenge(args[2]), message.channel);
