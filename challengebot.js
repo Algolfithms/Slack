@@ -28,9 +28,7 @@ class ChallengeBot{
         var handler = (message) => this.interpretText(message);
         this.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
             console.log(message.text);
-            if(message != undefined){
-                handler(message);
-            }
+            handler(message);
         });
     }
 
@@ -47,7 +45,11 @@ class ChallengeBot{
      */
     interpretText(message){
         //TODO restructure all of below so it isn't all just if statements (eg. move them into their own functions or something)
-        var args = message.text.split(" ");
+        try{
+            var args = message.text.split(" ");
+        }catch(e){
+            return;
+        }
         if(args[0] !== this.id){return;} //Will quit the execution of the function if the first word of the message isn't "@challengebot"
         if(args[1] == "add"){ //Will add a challenge for the possible selection of challenges that this has
             if(args.length < 4){
