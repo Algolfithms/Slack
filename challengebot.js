@@ -66,6 +66,7 @@ class ChallengeBot{
             if(args[0] !== this.id){return;} //Will quit the execution of the function if the first word of the message isn't "@challengebot"
             args.push(null);
         }catch(e){
+            console.log(e.message);
             return;
         }
         var stringToOutput = "";
@@ -88,6 +89,7 @@ class ChallengeBot{
             this.database.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" ")]);
             return "I attempted the addition of the challenge successfully.";
         }catch(e){
+            console.log(e.message);
             return "I couldn't add your challenge... The connection to the database may not be working, or you may have given incorrect arguments; the correct usage of this command is '@challengebot add [one word challenge name] [challenge description]'.";
         }
     }
@@ -101,6 +103,7 @@ class ChallengeBot{
             this.database.query("DELETE FROM challenges WHERE name=$1 AND (current IS NULL OR current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS'))", args[0]);
             return "I attempted the removal of the challenge successfully.";
         }catch(e){
+            console.log(e.message);
             return "I couldn't remove your challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot remove [one word challenge name]'."
         }
     }
@@ -126,6 +129,7 @@ class ChallengeBot{
             }
             return "The possible challenges are " + formattedPossible + ".";
         }catch(e){
+            console.log(e.message);
             return "I could not retrieve the possible challenges... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot possible'.";
         }
     }
@@ -143,6 +147,7 @@ class ChallengeBot{
             while(row == null){}
             return description;
         }catch(e){
+            console.log(e.message);
             return "I can't describe that challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot describe [one word challenge name]'.";
         }
     }
@@ -174,6 +179,7 @@ class ChallengeBot{
             }
             return this.describeChallenge([current]);
         }catch(e){
+            console.log(e.message);
             return "I can't get the current challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot current'.";
         }
     }
