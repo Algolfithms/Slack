@@ -17,7 +17,11 @@ class ChallengeBot{
         //Handles connecting to the database
         var pg = require('pg');
         this.database = new pg.Client(databaseURL);
-        this.database.connect();
+        this.database.connect(function(err){
+            if(err){
+                console.log("Couldn't connect to the database\n", err);
+            }
+        });
 
         //Gets all of the needed slack npm libraries
         var RtmClient = require('@slack/client').RtmClient;
