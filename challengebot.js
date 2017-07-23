@@ -7,6 +7,8 @@ class ChallengeBot{
      * Sets bot handlers for events
      */
     constructor(token, databaseURL){
+        console.log("Starting challengebot...");
+
         //Initializes challengebot instancedata
         this.commands = {};
         this.id = "";
@@ -83,7 +85,7 @@ class ChallengeBot{
      */
     addChallenge(args){
         try{
-            this.database.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" "));
+            this.database.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" ")]);
             return "I attempted the addition of the challenge successfully.";
         }catch(e){
             return "I couldn't add your challenge... The connection to the database may not be working, or you may have given incorrect arguments; the correct usage of this command is '@challengebot add [one word challenge name] [challenge description]'.";
