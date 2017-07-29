@@ -14,7 +14,7 @@ class Database{
      * if an input is given, it does a clean query
      * Returns the output of the query
      */
-    query(text, input = null){
+    async query(text, input = null){
         const client = await this.pool.connect();
         var result;
         var resultSetter = (err, res) => {
