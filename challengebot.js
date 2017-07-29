@@ -45,7 +45,7 @@ class ChallengeBot{
         setInterval(function(){
             try{
                 var oldRows = this.database.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
-                for(int i = 0; i < oldRows.length; i++){
+                for(i = 0; i < oldRows.length; i++){
                     this.removeChallenge(oldRows[i]["name"]);
                 }
             }catch(e){}
