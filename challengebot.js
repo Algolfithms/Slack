@@ -6,22 +6,14 @@ class ChallengeBot{
      * Takes in a token and then initializes class properties as well as
      * Sets bot handlers for events
      */
-    constructor(token, databaseURL){
+    constructor(token, database){
         console.log("Starting challengebot...");
 
         //Initializes challengebot instancedata
         this.commands = {};
         this.id = "";
-        this.database;
-
-        //Handles connecting to the database
-        var pg = require('pg');
-        this.database = new pg.Pool({connectionString:databaseURL});
-        this.database.connect(function(err){
-            if(err){
-                console.log("Couldn't connect to the database\n", err);
-            }
-        });
+        this.database = database;
+        var self = this;
 
         //Gets all of the needed slack npm libraries
         var RtmClient = require('@slack/client').RtmClient;
@@ -30,19 +22,16 @@ class ChallengeBot{
 
         //Sets the handler for what the bot should do once it initializes
         this.rtm = new RtmClient(token);
-        this.rtm.idFunc = (id) => this.id = id;
         this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
-            var id = "<@" + rtmStartData.self.id + ">";
-            console.log(rtmStartData.self.name + " is ready to rumble as " + id + " on the team " + rtmStartData.team.name);
-            this.idFunc(id);
+            self.id = "<@" + rtmStartData.self.id + ">";
+            console.log(rtmStartData.self.name + " is ready to rumble as " + self.id + " on the team " + rtmStartData.team.name);
         });
         this.rtm.start();
 
         //Sets the handler for what the bot should do whenever it sees a message
-        var msgFunc = (message) => this.interpretText(message);
         this.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
             console.log(message.channel + ">:" + message.text);
-            msgFunc(message);
+            self.interpretText(message);
         });
 
         //Initializes all of the challengebot's possible commands and assigns them functions
@@ -51,6 +40,16 @@ class ChallengeBot{
         this.commands["describe"] = this.describeChallenge;
         this.commands["possible"] = this.getPossibleChallenges;
         this.commands["current"] = this.getCurrentChallenge;
+
+        //Will continuously delete old challenges
+        setInterval(function(){
+            try{
+                var oldRows = this.database.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
+                for(int i = 0; i < oldRows.length; i++){
+                    this.removeChallenge(oldRows[i]["name"]);
+                }
+            }catch(e){}
+        }, 150000);
     }
 
     /**
@@ -117,19 +116,10 @@ class ChallengeBot{
      */
     getPossibleChallenges(args){
         try{
-            var query = this.database.query("SELECT name FROM challenges");
-            var possible = [];
-            query.on("row", function(row, result){
-                possible.push(row["name"]);
-            });
-            var done = false;
-            query.on("end", function(result){
-                done = true;
-            });
-            while(!done){}
-            var formattedPossible = (possible.length == 0)? "empty" : "";
-            for(i = 0; i < possible.length; i++){
-                formattedPossible += "'" + possible[i] + "'" + (i == possible.length - 1)? "" : (i == possible.length - 2)? ", and " : ", " ;
+            var rows = this.database.query("SELECT name FROM challenges");
+            var formattedPossible = (rows.length == 0)? "empty" : "";
+            for(i = 0; i < rows.length; i++){
+                formattedPossible += "'" + rows[i]["name"] + "'" + (i == rows.length - 1)? "" : (i == rows.length - 2)? ", and " : ", " ;
             }
             return "The possible challenges are " + formattedPossible + ".";
         }catch(e){
@@ -143,12 +133,7 @@ class ChallengeBot{
      */
     describeChallenge(args){
         try{
-            var query = this.database.query("SELECT description FROM challenges WHERE name=$1", args[0]);
-            var description = null;
-            query.on("row", function(row, result){
-                description = row["description"];
-            });
-            while(row == null){}
+            var description = this.database.query("SELECT description FROM challenges WHERE name=$1", [args[0]])[0]["description"];
             return description;
         }catch(e){
             console.log(e.message);
@@ -158,28 +143,16 @@ class ChallengeBot{
 
     /**
      * Will return a description of the current challenge
+     * Either gets the already selected current challenge of the day, or if there isn't any
+     * Will choose a new challenge randomly
      */
     getCurrentChallenge(args){
         try{
-            this.database.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')").on("row", function(row, result){
-                this.removeChallenge([row["name"]]);
-            });
-            var query = this.database.query("SELECT name FROM challenges WHERE current IS NOT NULL AND current > TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
-            var current = null;
-            var queryComplete = false;
-            query.on("row", function(row, result){
-                current = row["name"];
-                queryComplete = true;
-            });
-            query.on("end", function(result){
-                queryComplete = true;
-            });
-            while(!queryComplete){}
-            if(current == null){
-                this.database.query("SELECT name FROM challenges ORDER BY RANDOM() LIMIT 1").on("row", function(row, result){
-                    current = row["name"];
-                });
-                while(current == null){}
+            var current = "";
+            try{
+                current = this.database.query("SELECT name FROM challenges WHERE current IS NOT NULL AND current > TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')")[0]["name"];
+            }catch(e){
+                current = this.database.query("SELECT name FROM challenges ORDER BY RANDOM() LIMIT 1")[0]["name"];
             }
             return this.describeChallenge([current]);
         }catch(e){

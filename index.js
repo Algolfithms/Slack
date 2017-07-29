@@ -2,7 +2,9 @@
 //Below makes the bots on slack
 'use strict';
 const ChallengeBot = require("./challengebot.js");
-let challengebot = new ChallengeBot(process.env.challengeBotToken, process.env.DATABASE_URL);
+const Database = require("./database.js");
+let database = new Database(process.env.DATABASE_URL);
+let challengebot = new ChallengeBot(process.env.challengeBotToken, database);
 
 //Below makes a webpage so that a timer can keep pinging the website
 //Prevents the script from going to sleep
