@@ -3,8 +3,7 @@
 'use strict';
 const ChallengeBot = require("./challengebot.js");
 const Database = require("./database.js");
-let database = Database(process.env.DATABASE_URL);
-let challengebot = new ChallengeBot(process.env.challengeBotToken, database);
+let challengebot = new ChallengeBot(process.env.challengeBotToken, Database.getDatabase(process.env.DATABASE_URL));
 
 //Below makes a webpage so that a timer can keep pinging the website
 //Prevents the script from going to sleep

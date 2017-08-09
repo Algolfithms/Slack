@@ -45,7 +45,7 @@ class ChallengeBot{
         setInterval(function(){
             try{
                 var oldRows = this.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
-                for(i = 0; i < oldRows.length; i++){
+                for(var i = 0; i < oldRows.length; i++){
                     this.removeChallenge(oldRows[i]["name"]);
                 }
             }catch(e){}
@@ -77,7 +77,7 @@ class ChallengeBot{
             stringToOutput = this.commands[args[1]](args.slice(2, args.length));
         }catch(e){
             stringToOutput = "The command wasn't understood... The possible commands I listen to are ";
-            for(i = 0; i < Object.keys(this.commands).length; i++){
+            for(var i = 0; i < Object.keys(this.commands).length; i++){
                 stringToOutput += "'" + Object.keys(this.commands)[i] + "'" + (i == Object.keys(this.commands).length - 1)? "" : (i == Object.keys(this.commands).length - 2)? ", and " : ", " ;
             }
         }
@@ -118,7 +118,7 @@ class ChallengeBot{
         try{
             var rows = this.query("SELECT name FROM challenges");
             var formattedPossible = (rows.length == 0)? "empty" : "";
-            for(i = 0; i < rows.length; i++){
+            for(var i = 0; i < rows.length; i++){
                 formattedPossible += "'" + rows[i]["name"] + "'" + (i == rows.length - 1)? "" : (i == rows.length - 2)? ", and " : ", " ;
             }
             return "The possible challenges are " + formattedPossible + ".";
