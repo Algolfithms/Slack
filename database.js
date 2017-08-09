@@ -1,5 +1,5 @@
 'use strict';
-module.getDatabase = function(connectionURL){
+module.exports.getDatabase = function(connectionURL){
     return function(text, input = null){
         const Pool = require("pg");
         pool = new Pool({connectionString: connectionURL})
