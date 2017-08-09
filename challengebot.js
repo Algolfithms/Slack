@@ -12,7 +12,7 @@ class ChallengeBot{
         //Initializes challengebot instancedata
         this.commands = {};
         this.id = "";
-        this.database = database;
+        this.query = database;
         var self = this;
 
         //Gets all of the needed slack npm libraries
@@ -44,7 +44,7 @@ class ChallengeBot{
         //Will continuously delete old challenges
         setInterval(function(){
             try{
-                var oldRows = this.database.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
+                var oldRows = this.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
                 for(i = 0; i < oldRows.length; i++){
                     this.removeChallenge(oldRows[i]["name"]);
                 }
@@ -89,7 +89,7 @@ class ChallengeBot{
      */
     addChallenge(args){
         try{
-            this.database.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" ")]);
+            this.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" ")]);
             return "I attempted the addition of the challenge successfully.";
         }catch(e){
             console.log(e.message);
@@ -103,7 +103,7 @@ class ChallengeBot{
      */
     removeChallenge(args){
         try{
-            this.database.query("DELETE FROM challenges WHERE name=$1 AND (current IS NULL OR current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS'))", args[0]);
+            this.query("DELETE FROM challenges WHERE name=$1 AND (current IS NULL OR current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS'))", args[0]);
             return "I attempted the removal of the challenge successfully.";
         }catch(e){
             console.log(e.message);
@@ -116,7 +116,7 @@ class ChallengeBot{
      */
     getPossibleChallenges(args){
         try{
-            var rows = this.database.query("SELECT name FROM challenges");
+            var rows = this.query("SELECT name FROM challenges");
             var formattedPossible = (rows.length == 0)? "empty" : "";
             for(i = 0; i < rows.length; i++){
                 formattedPossible += "'" + rows[i]["name"] + "'" + (i == rows.length - 1)? "" : (i == rows.length - 2)? ", and " : ", " ;
@@ -133,7 +133,7 @@ class ChallengeBot{
      */
     describeChallenge(args){
         try{
-            var description = this.database.query("SELECT description FROM challenges WHERE name=$1", [args[0]])[0]["description"];
+            var description = this.query("SELECT description FROM challenges WHERE name=$1", [args[0]])[0]["description"];
             return description;
         }catch(e){
             console.log(e.message);
@@ -150,9 +150,9 @@ class ChallengeBot{
         try{
             var current = "";
             try{
-                current = this.database.query("SELECT name FROM challenges WHERE current IS NOT NULL AND current > TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')")[0]["name"];
+                current = this.query("SELECT name FROM challenges WHERE current IS NOT NULL AND current > TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')")[0]["name"];
             }catch(e){
-                current = this.database.query("SELECT name FROM challenges ORDER BY RANDOM() LIMIT 1")[0]["name"];
+                current = this.query("SELECT name FROM challenges ORDER BY RANDOM() LIMIT 1")[0]["name"];
             }
             return this.describeChallenge([current]);
         }catch(e){

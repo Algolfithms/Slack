@@ -3,7 +3,7 @@
 'use strict';
 const ChallengeBot = require("./challengebot.js");
 const Database = require("./database.js");
-let database = new Database(process.env.DATABASE_URL);
+let database = Database(process.env.DATABASE_URL);
 let challengebot = new ChallengeBot(process.env.challengeBotToken, database);
 
 //Below makes a webpage so that a timer can keep pinging the website
