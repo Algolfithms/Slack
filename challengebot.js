@@ -83,10 +83,24 @@ class ChallengeBot{
                 .then(text => this.sendMessage(text, message.channel))
                 .catch(error => this.sendMessage(error, message.channel));
         }catch(e){
-            var stringToOutput = "The command wasn't understood... The possible commands I listen to are ";
-            for(var i = 0; i < Object.keys(this.commands).length; i++){
-                stringToOutput += "'" + Object.keys(this.commands)[i] + "'" + (i == Object.keys(this.commands).length - 1)? "" : (i == Object.keys(this.commands).length - 2)? ", and " : ", " ;
+            let stringToOutput = "The command wasn't understood... The possible commands I listen to are ";
+
+            const length = Object.keys(this.commands).length;
+
+            for(let i = 0; i < length; i++) {
+                const challenge = challenges[i];
+                let text = `'${challenge.name}'`;
+
+                if (i === length - 1){
+                    text += `.`;
+                } else if (i === length - 2) {
+                    text += `, and `;
+                } else {
+                    text += `, `;
+                }
+                stringToOutput += text;
             }
+
             this.sendMessage(stringToOutput, message.channel);
         }
     }
