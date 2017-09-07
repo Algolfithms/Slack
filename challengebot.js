@@ -25,7 +25,7 @@ class ChallengeBot{
         this.rtm = new RtmClient(token);
         this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, rtmStartData => {
             this.id = "<@" + rtmStartData.self.id + ">";
-            console.log(rtmStartData.self.name + " is ready to rumble as " + self.id + " on the team " + rtmStartData.team.name);
+            console.log(rtmStartData.self.name + " is ready to rumble as " + this.id + " on the team " + rtmStartData.team.name);
         });
         this.rtm.start();
 
