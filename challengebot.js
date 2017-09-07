@@ -44,7 +44,7 @@ class ChallengeBot{
 
         //Will continuously delete old challenges
         setInterval(function(){
-            const currentDate = new Date.now();
+            const currentDate = Date.now();
             currentDate.setHours(7, 30, 0, 0);
 
             Challenge.find({
@@ -77,32 +77,35 @@ class ChallengeBot{
             console.log(e.message);
             return;
         }
-        var stringToOutput = "";
+
         try{
-            stringToOutput = this.commands[args[1]](args.slice(2, args.length));
+            this.commands[args[1]](args.slice(2, args.length))
+                .then(text => this.sendMessage(text, message.channel))
+                .catch(error => this.sendMessage(error, message.channel));
         }catch(e){
-            stringToOutput = "The command wasn't understood... The possible commands I listen to are ";
+            var stringToOutput = "The command wasn't understood... The possible commands I listen to are ";
             for(var i = 0; i < Object.keys(this.commands).length; i++){
                 stringToOutput += "'" + Object.keys(this.commands)[i] + "'" + (i == Object.keys(this.commands).length - 1)? "" : (i == Object.keys(this.commands).length - 2)? ", and " : ", " ;
             }
+            this.sendMessage(stringToOutput, message.channel);
         }
-        this.sendMessage(stringToOutput, message.channel);
     }
 
     /**
      * Adds a challenge to the list of possible challenges and returns the success of adding the challenge
      */
     addChallenge(args){
+        return new Promise((resolve, reject) => {
+            const challengeData = {
+                name: args[0],
+                description: [args[0], args.slice(1, args.length).join(" ")]
+            };
 
-        const challengeData = {
-            name: args[0],
-            description: [args[0], args.slice(1, args.length).join(" ")]
-        };
+            Challenge.create(challengeData, (error, challenge) => {
+                if (error) return reject(`I encountered a problem creating the challenge!\nError: ${error}`);
 
-        Challenge.create(challengeData, (error, challenge) => {
-            if (error) return `I encountered a problem creating the challenge!\nError: ${error}`;
-
-            return 'I have successfully created the challenge!';
+                return resolve('I have successfully created the challenge!');
+            });
         });
     }
 
@@ -111,13 +114,15 @@ class ChallengeBot{
      * Will not delete a challenge if the challenge is the current challenge
      */
     removeChallenge(args){
-        Challenge.findOne({
-            current: false,
-            name: args[0]
-        }).remove(error => {
-            if (error) return 'Error deleting Challenge!';
+        return new Promise((resolve, reject) => {
+            Challenge.findOne({
+                current: false,
+                name: args[0]
+            }).remove(error => {
+                if (error) return reject('Error deleting Challenge!');
 
-            return 'I have delete that old Challenge!';
+                return resolve('I have delete that old Challenge!');
+            });
         });
     }
 
@@ -125,28 +130,29 @@ class ChallengeBot{
      * Will return a list of all of the possible challenges
      */
     getPossibleChallenges(args){
+        return new Promise((resolve, reject) => {
+            Challenge.find({}, (error, challenges) => {
+                if (error) return  reject(`I am having trouble getting the possible challenges!\nError: ${error}`);
 
-        Challenge.find({}, (error, challenges) => {
-            if (error) return  `I am having trouble getting the possible challenges!\nError: ${error}`;
+                if (challenges.length === 0) return resolve('There are no Challenges!');
 
-            if (challenges.length === 0) return 'There are no Challenges!';
+                let formattedPossible = `The possible challenges are `;
 
-            let formattedPossible = `The possible challenges are `;
+                for(let i = 0; i < challenges.length; i++) {
+                    const challenge = challenges[i];
+                    let challengeText = `'${challenge.name}'`;
 
-            for(let i = 0; i < challenges.length; i++) {
-                const challenge = challenges[i];
-                let challengeText = `'${challenge.name}'`;
-
-                if (i === challenges.length - 1){
-                    challengeText += `.`;
-                } else if (i === challenges.length - 2) {
-                    challengeText += `, and `;
-                } else {
-                    challengeText += `, `;
+                    if (i === challenges.length - 1){
+                        challengeText += `.`;
+                    } else if (i === challenges.length - 2) {
+                        challengeText += `, and `;
+                    } else {
+                        challengeText += `, `;
+                    }
+                    formattedPossible += challengeText;
                 }
-                formattedPossible += challengeText;
-            }
-            return formattedPossible;
+                return resolve(formattedPossible);
+            });
         });
     }
 
@@ -154,12 +160,14 @@ class ChallengeBot{
      * Will, given a challenge name, return a description of the challenge
      */
     describeChallenge(args){
-        Challenge.findOne({name: args[0]}, (error, challenge) => {
-            if (error) return `I am having troubles finding the challenge!\nError: ${error}`;
+        return new Promise((resolve, reject) => {
+            Challenge.findOne({name: args[0]}, (error, challenge) => {
+                if (error) return reject(`I am having troubles finding the challenge!\nError: ${error}`);
 
-            if (challenge === null) return 'I could not find that challenge!';
+                if (challenge === null) return resolve('I could not find that challenge!');
 
-            return challenge.description;
+                return resolve(challenge.description);
+            });
         });
     }
 
@@ -169,27 +177,28 @@ class ChallengeBot{
      * Will choose a new challenge randomly
      */
     getCurrentChallenge(args){
+        return new Promise((resolve, reject) => {
+            Challenge.findOne({current: true}, (error, challenge) => {
+                if (error) return reject(`I am having troubles finding the current challenge!\nError: ${error}`);
 
-        Challenge.findOne({current: true}, (error, challenge) => {
-            if (error) return `I am having troubles finding the current challenge!\nError: ${error}`;
+                if (challenge === null) {
+                    Challenge.count().exec((countError, count) => {
+                        if (countError) return reject(`I am having troubles counting all the challenges!\nError: ${error}`);
 
-            if (challenge === null) {
-                Challenge.count().exec((countError, count) => {
-                    if (countError) return `I am having troubles counting all the challenges!\nError: ${error}`;
+                        // Get a random entry
+                        const random = Math.floor(Math.random() * count);
 
-                    // Get a random entry
-                    const random = Math.floor(Math.random() * count);
+                        // Again query all users but only fetch one offset by our random #
+                        Challenge.findOne().skip(random).exec((error, newChallenge) => {
+                            if (error) return reject(`I had a problem random choosing a new Challenge\nError: ${error}`);
 
-                    // Again query all users but only fetch one offset by our random #
-                    Challenge.findOne().skip(random).exec((error, newChallenge) => {
-                        if (error) return `I had a problem random choosing a new Challenge\nError: ${error}`;
-
-                        return newChallenge.description;
+                            return resolve(newChallenge.description);
+                        });
                     });
-                });
-            } else {
-                return challenge.description;
-            }
+                } else {
+                    return resolve(challenge.description);
+                }
+            });
         });
     }
 
