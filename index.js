@@ -2,8 +2,14 @@
 //Below makes the bots on slack
 'use strict';
 const ChallengeBot = require("./challengebot.js");
-const Database = require("./database.js");
-let challengebot = new ChallengeBot(process.env.challengeBotToken, Database.getDatabase(process.env.DATABASE_URL));
+
+const mongoose = require('mongoose');
+mongoose.connect(process.env.DATABASE_URL);
+const database = mongoose.connection;
+
+database.on('error', err => console.log(`Connection Error: ${err}`));
+
+let challengebot = new ChallengeBot(process.env.challengeBotToken);
 
 //Below makes a webpage so that a timer can keep pinging the website
 //Prevents the script from going to sleep
