@@ -1,4 +1,7 @@
 'use strict';
+
+const Challenge = require('./model/challenge');
+
 class ChallengeBot{
 
     /**
@@ -6,14 +9,12 @@ class ChallengeBot{
      * Takes in a token and then initializes class properties as well as
      * Sets bot handlers for events
      */
-    constructor(token, database){
+    constructor(token){
         console.log("Starting challengebot...");
 
         //Initializes challengebot instancedata
         this.commands = {};
         this.id = "";
-        this.query = database;
-        var self = this;
 
         //Gets all of the needed slack npm libraries
         var RtmClient = require('@slack/client').RtmClient;
@@ -22,16 +23,16 @@ class ChallengeBot{
 
         //Sets the handler for what the bot should do once it initializes
         this.rtm = new RtmClient(token);
-        this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, function (rtmStartData) {
-            self.id = "<@" + rtmStartData.self.id + ">";
+        this.rtm.on(CLIENT_EVENTS.RTM.AUTHENTICATED, rtmStartData => {
+            this.id = "<@" + rtmStartData.self.id + ">";
             console.log(rtmStartData.self.name + " is ready to rumble as " + self.id + " on the team " + rtmStartData.team.name);
         });
         this.rtm.start();
 
         //Sets the handler for what the bot should do whenever it sees a message
-        this.rtm.on(RTM_EVENTS.MESSAGE, function handleRtmMessage(message) {
+        this.rtm.on(RTM_EVENTS.MESSAGE, message => {
             console.log(message.channel + ">:" + message.text);
-            self.interpretText(message);
+            this.interpretText(message);
         });
 
         //Initializes all of the challengebot's possible commands and assigns them functions
@@ -43,12 +44,16 @@ class ChallengeBot{
 
         //Will continuously delete old challenges
         setInterval(function(){
-            try{
-                var oldRows = this.query("SELECT name FROM challlenges WHERE current IS NOT NULL AND current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')");
-                for(var i = 0; i < oldRows.length; i++){
-                    this.removeChallenge(oldRows[i]["name"]);
+            const currentDate = new Date.now();
+            currentDate.setHours(7, 30, 0, 0);
+
+            Challenge.find({
+                current: true,
+                lastUsed: {
+                    $lt: currentDate // lastUsed < currentDate
                 }
-            }catch(e){}
+            }).remove().exec();
+
         }, 150000);
     }
 
@@ -88,13 +93,17 @@ class ChallengeBot{
      * Adds a challenge to the list of possible challenges and returns the success of adding the challenge
      */
     addChallenge(args){
-        try{
-            this.query("INSERT INTO challenges (name, description) VALUES ($1, $2)", [args[0], args.slice(1, args.length).join(" ")]);
-            return "I attempted the addition of the challenge successfully.";
-        }catch(e){
-            console.log(e.message);
-            return "I couldn't add your challenge... The connection to the database may not be working, or you may have given incorrect arguments; the correct usage of this command is '@challengebot add [one word challenge name] [challenge description]'.";
-        }
+
+        const challengeData = {
+            name: args[0],
+            description: [args[0], args.slice(1, args.length).join(" ")]
+        };
+
+        Challenge.create(challengeData, (error, challenge) => {
+            if (error) return `I encountered a problem creating the challenge!\nError: ${error}`;
+
+            return 'I have successfully created the challenge!';
+        });
     }
 
     /**
@@ -102,43 +111,52 @@ class ChallengeBot{
      * Will not delete a challenge if the challenge is the current challenge
      */
     removeChallenge(args){
-        try{
-            this.query("DELETE FROM challenges WHERE name=$1 AND (current IS NULL OR current < TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS'))", args[0]);
-            return "I attempted the removal of the challenge successfully.";
-        }catch(e){
-            console.log(e.message);
-            return "I couldn't remove your challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot remove [one word challenge name]'."
-        }
+        Challenge.findOne({
+            current: false,
+            name: args[0]
+        }).remove(error => {
+            if (error) return 'Error deleting Challenge!';
+
+            return 'I have delete that old Challenge!';
+        });
     }
 
     /**
      * Will return a list of all of the possible challenges
      */
     getPossibleChallenges(args){
-        try{
-            var rows = this.query("SELECT name FROM challenges");
-            var formattedPossible = (rows.length == 0)? "empty" : "";
-            for(var i = 0; i < rows.length; i++){
-                formattedPossible += "'" + rows[i]["name"] + "'" + (i == rows.length - 1)? "" : (i == rows.length - 2)? ", and " : ", " ;
+
+        Challenge.find({}, challenges => {
+            if (challenges.length === 0) return 'There are no Challenges!';
+
+            let formattedPossible = `The possible challenges are `;
+
+            for(let i = 0; i < challenges.length; i++) {
+                const challenge = challenges[i];
+                let challengeText = `'${challenge.name}'`;
+
+                if (i === challenges.length - 1){
+                    challengeText += `.`;
+                } else if (i === challenges.length - 2) {
+                    challengeText += `, and `;
+                } else {
+                    challengeText += `, `;
+                }
+                formattedPossible += challengeText;
             }
-            return "The possible challenges are " + formattedPossible + ".";
-        }catch(e){
-            console.log(e.message);
-            return "I could not retrieve the possible challenges... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot possible'.";
-        }
+            return formattedPossible;
+        });
     }
 
     /**
      * Will, given a challenge name, return a description of the challenge
      */
     describeChallenge(args){
-        try{
-            var description = this.query("SELECT description FROM challenges WHERE name=$1", [args[0]])[0]["description"];
-            return description;
-        }catch(e){
-            console.log(e.message);
-            return "I can't describe that challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot describe [one word challenge name]'.";
-        }
+        Challenge.findOne({name: args[0]}, challenge => {
+            if (challenge === null) return 'I could not find that challenge!';
+
+            return challenge.description;
+        });
     }
 
     /**
@@ -147,18 +165,24 @@ class ChallengeBot{
      * Will choose a new challenge randomly
      */
     getCurrentChallenge(args){
-        try{
-            var current = "";
-            try{
-                current = this.query("SELECT name FROM challenges WHERE current IS NOT NULL AND current > TO_TIMESTAMP(CURRENT_DATE || ' 07:30:00', 'YYYY-MM-DD HH:MI:SS')")[0]["name"];
-            }catch(e){
-                current = this.query("SELECT name FROM challenges ORDER BY RANDOM() LIMIT 1")[0]["name"];
+
+        Challenge.findOne({current: true}, challenge => {
+            if (challenge === null) {
+                Challenge.count().exec((err, count) => {
+                    // Get a random entry
+                    const random = Math.floor(Math.random() * count);
+
+                    // Again query all users but only fetch one offset by our random #
+                    User.findOne().skip(random).exec((error, newChallenge) => {
+                        if (error) return `I had a problem random choosing a new Challenge\nError: ${error}`;
+
+                        return newChallenge.description;
+                    });
+                });
+            } else {
+                return challenge.description;
             }
-            return this.describeChallenge([current]);
-        }catch(e){
-            console.log(e.message);
-            return "I can't get the current challenge... The connection to the database may not be working or you may have given incorrect arguments; the correct usage of this command is '@challengebot current'.";
-        }
+        });
     }
 
 }
