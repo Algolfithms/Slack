@@ -126,7 +126,9 @@ class ChallengeBot{
      */
     getPossibleChallenges(args){
 
-        Challenge.find({}, challenges => {
+        Challenge.find({}, (error, challenges) => {
+            if (error) return  `I am having trouble getting the possible challenges!\nError: ${error}`;
+
             if (challenges.length === 0) return 'There are no Challenges!';
 
             let formattedPossible = `The possible challenges are `;
@@ -152,7 +154,9 @@ class ChallengeBot{
      * Will, given a challenge name, return a description of the challenge
      */
     describeChallenge(args){
-        Challenge.findOne({name: args[0]}, challenge => {
+        Challenge.findOne({name: args[0]}, (error, challenge) => {
+            if (error) return `I am having troubles finding the challenge!\nError: ${error}`;
+
             if (challenge === null) return 'I could not find that challenge!';
 
             return challenge.description;
@@ -166,14 +170,18 @@ class ChallengeBot{
      */
     getCurrentChallenge(args){
 
-        Challenge.findOne({current: true}, challenge => {
+        Challenge.findOne({current: true}, (error, challenge) => {
+            if (error) return `I am having troubles finding the current challenge!\nError: ${error}`;
+
             if (challenge === null) {
-                Challenge.count().exec((err, count) => {
+                Challenge.count().exec((countError, count) => {
+                    if (countError) return `I am having troubles counting all the challenges!\nError: ${error}`;
+
                     // Get a random entry
                     const random = Math.floor(Math.random() * count);
 
                     // Again query all users but only fetch one offset by our random #
-                    User.findOne().skip(random).exec((error, newChallenge) => {
+                    Challenge.findOne().skip(random).exec((error, newChallenge) => {
                         if (error) return `I had a problem random choosing a new Challenge\nError: ${error}`;
 
                         return newChallenge.description;
