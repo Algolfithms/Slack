@@ -44,8 +44,8 @@ class ChallengeBot{
 
         //Will continuously delete old challenges
         setInterval(function(){
-            const currentDate = Date.now();
-            currentDate.setHours(7, 30, 0, 0);
+            const currentDate = new Date();
+            currentDate.setHours(6, 30, 0, 0); // 7:30, hours starts at 0 and goes to 23, so 7am = 6
 
             Challenge.find({
                 current: true,
