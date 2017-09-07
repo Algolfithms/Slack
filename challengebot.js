@@ -88,8 +88,8 @@ class ChallengeBot{
             const length = Object.keys(this.commands).length;
 
             for(let i = 0; i < length; i++) {
-                const challenge = challenges[i];
-                let text = `'${challenge.name}'`;
+                const commandName = Object.keys(this.commands)[i];
+                let text = `'${commandName}'`;
 
                 if (i === length - 1){
                     text += `.`;
