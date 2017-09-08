@@ -206,7 +206,7 @@ class ChallengeBot{
                         Challenge.findOne().skip(random).exec((error, newChallenge) => {
                             if (error) return reject(`I had a problem random choosing a new Challenge\nError: ${error}`);
 
-                            if(newChallenge === null) return resolve('There are no challenges I can choose to make curent!');
+                            if(newChallenge === null) return resolve('There are no challenges I can choose to make current!');
 
                             return resolve(newChallenge.description);
                         });
