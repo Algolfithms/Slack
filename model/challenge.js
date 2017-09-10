@@ -1,5 +1,9 @@
 const mongoose = require("mongoose");
 
+/**
+ * Below is the structure that all challenges must follow
+ * Challenges must have names, descriptions, lastUsed, and current
+ */
 const ChallengeSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -23,8 +27,8 @@ const ChallengeSchema = new mongoose.Schema({
     }
 });
 
-ChallengeSchema.index({current: 1}, {unique: true, partialFilterExpression: {current: true}}); // checks that only one Challenge can be current(true)
+//Below checks that only one Challenge can be current(true)
+ChallengeSchema.index({current: 1}, {unique: true, partialFilterExpression: {current: true}});
 
-// Parameter one is the name of the entry, second is the Schema to follow when creating an entry
-const Challenge = mongoose.model('Challenge', ChallengeSchema);
-module.exports = Challenge;
+//First param is the name of the entry, second param is the schema to follow when creating an entry
+module.exports = mongoose.model('Challenge', ChallengeSchema);

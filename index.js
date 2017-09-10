@@ -3,10 +3,10 @@
 'use strict';
 const ChallengeBot = require("./challengebot.js");
 
+//Below handles the connection to the MongoDB database
 const mongoose = require('mongoose');
 mongoose.connect(process.env.DATABASE_URL);
 const database = mongoose.connection;
-
 database.on('error', err => console.log(`Connection Error: ${err}`));
 
 let challengebot = new ChallengeBot(process.env.challengeBotToken);
